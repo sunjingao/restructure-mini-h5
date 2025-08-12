@@ -1,0 +1,84 @@
+// orderId
+const domHelper = reactive({
+  orderid: 0
+})
+
+// 获取当前年月日时分秒
+const currentTimestamp = ref(0)
+// list
+const getList = ref([])
+// 车型图片
+const carmodelpictures = ref()
+// 车辆预定还车时间
+const bookReturnTime = ref()
+const fmBookReturnTime = ref('')
+//动力模式[油（OIL）/电（ELECTRIC）]
+const vehicleDynamicModel = ref()
+// 总电量占比数
+const dianlaing = ref(10)
+// 当前电量
+const battery = ref()
+// 已用电量
+const charged = ref()
+// 手机经纬度
+const latitude = ref('')
+const longitude = ref('')
+// 车辆经纬度
+const vehiclelatitude = ref('')
+const vehiclelongitude = ref('')
+// GPs
+const gps = ref('')
+// 跳转导航经纬度
+const lal = reactive({
+  vehiclelatitude: 0,
+  vehiclelongitude: 0
+})
+// 盒子类型：楼兰、智信通、无盒
+const boxSupplier = ref(null)
+
+// 还车模态窗是否展示--不显示
+const show = ref(false)
+// 还车--车辆就位弹出层是否展示--不显示
+const showcspopup = ref(false)
+// 还车--车位已满弹出层是否展示--不显示
+const showcsympopup = ref(false)
+// 还车检查项
+const showjcxpopup = ref(false)
+// 还车--不在区域内
+const network = ref(false)
+
+// 车辆熄火
+const xh = ref('')
+// 车门已锁
+const cm = ref('')
+// 车灯
+const cd = ref('')
+// 车窗
+const cc = ref('')
+// 防盗锁
+const fds = ref('')
+// 还车失败
+const shibai = ref(false)
+// 商户号
+const tenantIdRef = ref(undefined)
+const hcsj = reactive({
+  // 未超时false;超时true
+  timeout: false,
+  //天
+  dayDiff: 0,
+  //小时
+  hours: 0,
+  //分钟
+  minutes: 0
+})
+
+// 还车时是否确认能源值数据
+const isReminderRef = ref(false)
+// 还车时确认能源值数据
+const returnReminderRef = ref({})
+// 弹窗是否展示能源费
+const hasEnergyRef = ref(false)
+// 弹窗是否展示服务费
+const hasServiceEnergyRef = ref(false)
+
+const isQuestionModalShow = ref(false)
