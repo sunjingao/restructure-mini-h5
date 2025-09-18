@@ -1,0 +1,693 @@
+<template>
+  <view>
+    <!-- 车辆信息 -->
+    <view
+      class="w-750rpx h-890rpx mt--2.5 flex-column bg-#fff"
+      v-if="getList.orderVehicle"
+    >
+      <view class="clxxbg ml28rpx mr28rpx mt20rpx">
+        <image
+          class="w-616rpx h-236rpx ml40rpx mr38rpx mt62rpx mb72rpx"
+          style="image-rendering: -webkit-optimize-contrast"
+          :src="carmodelpictures"
+        ></image>
+      </view>
+      <view class="flex justify-between items-center font-400 mt28rpx">
+        <!-- 车型 -->
+        <view class="font-size-32rpx text-#000000 pl28rpx">
+          {{ getList.orderVehicle.modelName }}
+          {{ getList.orderVehicle.seriesCode }}
+        </view>
+        <!-- 车牌号 -->
+        <view class="font-size-32rpx text-#0186F7 pr28rpx">{{
+          getList.orderVehicle.plateLicenseNo
+        }}</view>
+      </view>
+
+      <view class="flex items-center font-400 mt28rpx">
+        <image
+          class="w20rpx h26rpx ml28rpx pr10rpx"
+          style="image-rendering: -webkit-optimize-contrast"
+          src="https://mobje-pro-04-cos.mobje.cn/mini/mini/oil.png"
+        ></image>
+        <!-- 动力模式、变速箱类型、座位 -->
+        <view
+          v-if="vehicleDynamicModel === 'OIL'"
+          class="font-size-28rpx ml11rpx"
+          >油车 | {{ getList.orderVehicle.vehicleGearBox }}挡 |
+          {{ getList.orderVehicle.vehicleSeat }}座</view
+        >
+        <view v-else class="font-size-28rpx ml11rpx"
+          >电车 | {{ getList.orderVehicle.vehicleGearBox }}挡 |
+          {{ getList.orderVehicle.vehicleSeat }}座</view
+        >
+      </view>
+
+      <!-- 油车 -->
+      <view
+        v-if="vehicleDynamicModel === 'OIL'"
+        class="flex flex-items-center mt20rpx font-size-24rpx"
+      >
+        <!-- 当前电/油量 -->
+        <view class="ml28rpx font-600 color-#028AE6"
+          >{{ getList.orderVehicle.currentEnergyPercent }}L</view
+        >
+        <view class="ml14rpx color-#000000">续航约</view>
+        <!-- 续航里程 -->
+        <view class="color-#0186F7">{{
+          getList.orderVehicle.surplusMileage
+        }}</view>
+        <view class="color-#000000">公里</view>
+      </view>
+      <!-- 电车 -->
+      <view v-else class="flex flex-items-center mt20rpx font-size-24rpx">
+        <view class="ml30rpx flex flex-items-center">
+          <view v-if="battery === 10" class="flex flex-items-center">
+            <view
+              class="w-6rpx h-20rpx b-rd-3rpx bg-#058BE6 mr-6rpx"
+              v-for="index in battery"
+              :key="index"
+            ></view>
+          </view>
+          <view v-else class="flex flex-items-center">
+            <view
+              class="w-6rpx h-20rpx b-rd-3rpx bg-#058BE6 mr-6rpx"
+              v-for="index in battery"
+              :key="index"
+            ></view>
+            <view
+              class="w-6rpx h-20rpx b-rd-3rpx bg-#D8D8D8 ml-6rpx"
+              v-for="index in charged"
+              :key="index"
+            ></view>
+          </view>
+        </view>
+        <!-- 当前电/油量 -->
+        <view class="ml10rpx font-600 color-#028AE6"
+          >{{ getList.orderVehicle.currentEnergyPercent }}%</view
+        >
+        <view class="ml14rpx color-#000000">续航约</view>
+        <!-- 续航里程 -->
+        <view class="color-#0186F7">{{
+          getList.orderVehicle.surplusMileage
+        }}</view>
+        <view class="color-#000000">公里</view>
+      </view>
+
+      <view
+        class="w694rpx p-y28rpx  b-rd-16rpx bg-#f8f9fB ml28rpx mt28rpx mr28rpx"
+      >
+        <!-- 取车网点 -->
+        <view class="flex items-top">
+          <view
+            class="w44rpx   b-#0BCC9A  ml28rpx  mb28rpx"
+          >
+            <view
+              class="w28rpx  b-rd-4rpx b-2rpx b-solid ml8rpx mr8rpx font-size-28rpx color-#0BCC9A fw-500"
+              >还车网点</view
+            >
+          </view>
+          <view>
+            <view class="flex items-center">
+              <view
+                class="color-#000 ml28rpx  font-size-28rpx color-#000 fw-500"
+              >
+                {{ fmBookReturnTime }}
+              </view>
+              <view
+                v-if="
+                  hcsj.timeout === false &&
+                  hcsj.dayDiff === 0 &&
+                  hcsj.hours === 0
+                "
+                class="bg-#399EF8 b-rd-8rpx pl5rpx pr5rpx pt5rpx pb5rpx ml10rpx mt32rpx font-size-22rpx color-#fff"
+              >
+                {{ hcsj.minutes }}分钟后还车
+              </view>
+              <view
+                v-else-if="
+                  hcsj.timeout === false &&
+                  hcsj.dayDiff === 0 &&
+                  hcsj.hours === 1 &&
+                  hcsj.minutes === 0
+                "
+                class="bg-#399EF8 b-rd-8rpx pl5rpx pr5rpx pt5rpx pb5rpx ml10rpx mt32rpx font-size-22rpx color-#fff"
+              >
+                {{ hcsj.hours }}小时后还车
+              </view>
+              <view
+                v-else-if="
+                  hcsj.timeout === true &&
+                  hcsj.dayDiff !== 0 &&
+                  hcsj.hours !== 0
+                "
+                class="bg-#D9001B b-rd-8rpx pl5rpx pr5rpx pt5rpx pb5rpx ml10rpx mt32rpx font-size-22rpx color-#fff"
+              >
+                超时{{ hcsj.dayDiff }}天{{ hcsj.hours }}小时{{
+                  hcsj.minutes
+                }}分钟
+              </view>
+              <view
+                v-else-if="
+                  hcsj.timeout === true &&
+                  hcsj.dayDiff !== 0 &&
+                  hcsj.hours === 0
+                "
+                class="bg-#D9001B b-rd-8rpx pl5rpx pr5rpx pt5rpx pb5rpx ml10rpx mt32rpx font-size-22rpx color-#fff"
+              >
+                超时{{ hcsj.dayDiff }}天{{ hcsj.minutes }}分钟
+              </view>
+              <view
+                v-else-if="
+                  hcsj.timeout === true &&
+                  hcsj.dayDiff === 0 &&
+                  hcsj.hours !== 0
+                "
+                class="bg-#D9001B b-rd-8rpx pl5rpx pr5rpx pt5rpx pb5rpx ml10rpx mt32rpx font-size-22rpx color-#fff"
+              >
+                超时{{ hcsj.hours }}小时{{ hcsj.minutes }}分钟
+              </view>
+              <view
+                v-else-if="
+                  hcsj.timeout === true &&
+                  hcsj.dayDiff === 0 &&
+                  hcsj.hours === 0
+                "
+                class="bg-#D9001B b-rd-8rpx pl5rpx pr5rpx pt5rpx pb5rpx ml10rpx mt32rpx font-size-22rpx color-#fff"
+              >
+                超时{{ hcsj.minutes }}分钟
+              </view>
+            </view>
+            <view class="mt20rpx">
+              <view class="flex items-top">
+                <view>
+                  <view
+                    class="w-300rpx color-#000 ml28rpx font-size-28rpx color-#000 fw-500 overflow-hidden text-ellipsis ws-nowrap"
+                  >
+                    {{ getList.orderLocationReturn.cityName }}-{{
+                      getList.orderLocationReturn.locationName
+                    }}
+                  </view>
+                  <view
+                    class="color-#000 ml28rpx mt20rpx w392rpx font-size-28rpx color-#666 fw-400 line-clamp-2"
+                  >
+                    {{ getList.orderLocationReturn.locationAddress }}
+                  </view>
+                </view>
+                <view class="flex items-top">
+                  <view class="w4rpx h100rpx ml54rpx bg-#F3F3F3 b-rd-200rpx">
+                  </view>
+                  <view @click="navigation">
+                    <view class="w-56rpx h-56rpx ml48rpx">
+                      <image
+                        class="w-56rpx h-56rpx image-render-auto"
+                        src="https://mobje-pro-04-cos.mobje.cn/mini/mini/navigation.png"
+                      >
+                      </image>
+                    </view>
+
+                    <view
+                      class="w56rpx font-size-24rpx color-#666 fw-500 ml48rpx text-center"
+                      >导航</view
+                    >
+                  </view>
+                </view>
+              </view>
+
+              <view v-if="getList && getList.status === 'PICK_UP' && getList.orderVehicle?.currentEnergyPercent" class="ml28rpx font-size-28rpx color-#000 fw-500 flex mt-10px">
+                取车{{ getList.orderVehicle?.vehicleDynamicModel === 'OIL' ? '油量：' : '电量：'  }}
+                {{ getList?.startEnergyPercent }}{{ getList.orderVehicle?.vehicleDynamicModel === 'OIL' ? 'L' : '%'  }}
+                <view @click="handleVehicleModel">
+                  <image
+                    class="w-30rpx h-30rpx mb--5rpx ml-8rpx"
+                    src="https://mobje-pro-04-cos.mobje.cn/mini/mini/question.png"
+                  >
+                  </image>
+                </view>
+              </view>
+
+              <view
+                @click="Jumplocation"
+                class="ml28rpx mt20rpx w392rpx font-size-28rpx color-#0186F7 fw-400"
+              >
+                查看其他可还车网点 >
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    <!-- 开锁、关锁、熄火、启动 -->
+    <view
+      v-if="boxSupplier === 'ZXT'"
+      class="w-750rpx h-132rpx mt20rpx bg-#fff flex items-center"
+      style="justify-content: space-between"
+    >
+      <!-- 开锁 -->
+      <view
+        @click="carControlButton(1)"
+        class="w200rpx h66rpx ml56rpx bg-#F8F9FB flex justify-start items-center"
+      >
+        <image
+          class="w-28rpx h-24rpx ml26rpx mt22rpx mb26rpx"
+          style="image-rendering: -webkit-optimize-contrast"
+          src="https://mobje-pro-04-cos.mobje.cn/mini/mini/lock_open.png"
+        >
+        </image>
+        <view class="font-size-28rpx fw-500 ml8rpx">开锁</view>
+      </view>
+      <!-- 关锁 -->
+      <view
+        @click="carControlButton(2)"
+        class="w200rpx h66rpx mr56rpx bg-#F8F9FB flex justify-start items-center"
+      >
+        <image
+          class="w-22rpx h-28rpx ml28rpx mt24rpx mb24rpx"
+          style="image-rendering: -webkit-optimize-contrast"
+          src="https://mobje-pro-04-cos.mobje.cn/mini/mini/lock.png"
+        >
+        </image>
+        <view class="font-size-28rpx fw-500 ml8rpx">关锁</view>
+      </view>
+    </view>
+    <view
+      v-else
+      class="w-750rpx h-132rpx mt20rpx bg-#fff flex justify-start items-center"
+    >
+      <!-- 开锁 -->
+      <view
+        @click="carControlButton(1)"
+        class="w144rpx h66rpx ml56rpx bg-#F8F9FB flex justify-start items-center"
+      >
+        <image
+          class="w-28rpx h-24rpx ml26rpx mt22rpx mb26rpx"
+          style="image-rendering: -webkit-optimize-contrast"
+          src="https://mobje-pro-04-cos.mobje.cn/mini/mini/lock_open.png"
+        >
+        </image>
+        <view class="font-size-28rpx fw-500 ml8rpx">开锁</view>
+      </view>
+      <!-- 关锁 -->
+      <view
+        @click="carControlButton(2)"
+        class="w144rpx h66rpx bg-#F8F9FB ml20rpx flex justify-start items-center"
+      >
+        <image
+          class="w-22rpx h-28rpx ml28rpx mt24rpx mb24rpx"
+          style="image-rendering: -webkit-optimize-contrast"
+          src="https://mobje-pro-04-cos.mobje.cn/mini/mini/lock.png"
+        >
+        </image>
+        <view class="font-size-28rpx fw-500 ml8rpx">关锁</view>
+      </view>
+
+      <!-- 熄火 -->
+      <view
+        @click="carControlButton(3)"
+        class="w144rpx h66rpx bg-#F8F9FB ml20rpx flex justify-start items-center"
+      >
+        <image
+          class="w-28rpx h-28rpx ml28rpx mt24rpx mb24rpx"
+          style="image-rendering: -webkit-optimize-contrast"
+          src="https://mobje-pro-04-cos.mobje.cn/mini/mini/stop.png"
+        >
+        </image>
+        <view class="font-size-28rpx fw-500 ml8rpx">熄火</view>
+      </view>
+
+      <!-- 启动 -->
+      <view
+        @click="carControlButton(4)"
+        class="w144rpx h66rpx bg-#F8F9FB ml20rpx flex justify-start items-center"
+      >
+        <image
+          class="w-28rpx h-28rpx ml28rpx mt24rpx mb24rpx"
+          style="image-rendering: -webkit-optimize-contrast"
+          src="https://mobje-pro-04-cos.mobje.cn/mini/mini/play.png"
+        >
+        </image>
+        <view class="font-size-28rpx fw-500 ml8rpx">启动</view>
+      </view>
+    </view>
+
+
+
+    <!-- 还车按钮 -->
+    <view
+      class="w-750rpx h-90rpx mt185rpx mb20rpx flex justify-between items-center"
+    >
+      <view
+        class="w-688rpx ml28rpx border-2 border-solid b-rd-200rpx border-color-#F0F3F6"
+        @click="handleClickReturnCar"
+      >
+        <up-button
+          type="primary"
+          shape="circle"
+          color="linear-gradient(270deg, #03B2FF 0%, #0080FF 100%)"
+          text="还车"
+        ></up-button>
+      </view>
+    </view>
+  </view>
+  <!-- 弹窗 -->
+  <u-modal
+    :show="show"
+    @confirm="confirm"
+    @cancel="cancel"
+    showCancelButton
+    width="620rpx"
+    class="mt0rpx"
+    confirmText="确认还车"
+    cancelText="暂不还车"
+  >
+    <view class="w-620rpx">
+      <!-- 标题图片 -->
+      <view slot="header" class="w-620rpx h-326rpx mt--50rpx">
+        <image
+          class="w-620rpx h-326rpx"
+          style="image-rendering: -webkit-optimize-contrast"
+          src="https://mobje-pro-04-cos.mobje.cn/mini/mini/h_img1.png"
+        >
+        </image>
+      </view>
+      <!-- 内容 -->
+      <view slot="content" class="w-620rpx h-432rpx">
+        <view class="ml156rpx mt70rpx font-size-28rpx color-#666 fw-400">
+          还车前，请完成以下动作
+        </view>
+        <view
+          v-if="returnMessage"
+          class="flex justify-center items-center mx-46rpx mt32rpx text-center font-size-24rpx color-#FF5356 fw-400"
+        >
+          {{ returnMessage }}
+        </view>
+        <view class="flex justify-start items-center">
+          <view>
+            <image
+              class="w-56rpx h-52rpx ml160rpx mt56rpx"
+              style="image-rendering: -webkit-optimize-contrast"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/h_icon1.png"
+            >
+            </image>
+            <view class="font-size-32rpx color-#000 fw-400 mt-18rpx ml124rpx"
+              >带好物品</view
+            >
+          </view>
+          <view>
+            <image
+              class="w-52rpx h-52rpx ml160rpx mt56rpx"
+              style="image-rendering: -webkit-optimize-contrast"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/h_icon4.png"
+            >
+            </image>
+            <view class="font-size-32rpx color-#000 fw-400 mt-18rpx ml124rpx"
+              >车辆熄火</view
+            >
+          </view>
+        </view>
+        <view class="flex justify-start items-center">
+          <view>
+            <image
+              class="w-42rpx h-56rpx ml160rpx mt56rpx"
+              style="image-rendering: -webkit-optimize-contrast"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/h_icon3.png"
+            >
+            </image>
+            <view class="font-size-32rpx color-#000 fw-400 mt-18rpx ml124rpx"
+              >关闭车灯</view
+            >
+          </view>
+          <view>
+            <image
+              class="w-44rpx h-52rpx ml160rpx mt56rpx"
+              style="image-rendering: -webkit-optimize-contrast"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/h_icon2.png"
+            >
+            </image>
+            <view class="font-size-32rpx color-#000 fw-400 mt-18rpx ml124rpx"
+              >锁车关门</view
+            >
+          </view>
+        </view>
+      </view>
+    </view>
+  </u-modal>
+
+  <!-- 车辆已就位 -->
+  <u-popup :show="showcspopup" mode="center" round="20">
+    <view class="w-620rpx h-736rpx b-rd-20rpx bg-#fff">
+      <view class="w-620rpx h-146rpx flex justify-start items-center">
+        <view
+          class="w-48rpx h-16rpx ml276rpx t60rpx bg-#058BE6 b-rd-8rpx"
+        ></view>
+        <view
+          class="w-16rpx h-16rpx ml10rpx t60rpx bg-#D8D8D8 b-rd-16rpx"
+        ></view>
+      </view>
+      <view class="w-618rpx h-430rpx">
+        <image
+          class="w-618rpx h-430rpx image-render-auto"
+          src="https://mobje-pro-04-cos.mobje.cn/mini/mini/h_img3.png"
+        >
+        </image>
+      </view>
+      <view
+        class="w-620rpx mt60rpx text-center color-#666 font-size-28rpx fw-400"
+      >
+        车辆已就位
+      </view>
+    </view>
+  </u-popup>
+
+  <!-- 停车位已满/不在可还区域范围 -->
+  <u-popup :show="showcsympopup" mode="center" round="20">
+    <view class="w-620rpx h-736rpx b-rd-20rpx bg-#fff">
+      <view class="w-620rpx h-146rpx flex justify-start items-center">
+        <view
+          class="w-48rpx h-16rpx ml276rpx t60rpx bg-#058BE6 b-rd-8rpx"
+        ></view>
+        <view
+          class="w-16rpx h-16rpx ml10rpx t60rpx bg-#D8D8D8 b-rd-16rpx"
+        ></view>
+      </view>
+      <view class="w-620rpx h-430rpx">
+        <image
+          class="w-620rpx h-430rpx image-render-auto"
+          src="https://mobje-pro-04-cos.mobje.cn/mini/mini/h_img2.png"
+        >
+        </image>
+      </view>
+      <view
+        v-if="network"
+        class="w-476rpx ml74rpx mt40rpx text-center color-#666 font-size-28rpx fw-400"
+      >
+        当前网点停车位已满,请前往其他网点或蓝色自由取还区域还车。
+      </view>
+      <view
+        v-else
+        class="w-476rpx ml74rpx mt40rpx text-center color-#666 font-size-28rpx fw-400"
+      >
+        当前车辆不在可还区域，请前往其它网点还车。
+      </view>
+    </view>
+  </u-popup>
+
+  <!-- 还车检查项 -->
+  <u-popup :show="showjcxpopup" mode="center" round="20">
+    <view class="w-620rpx h-736rpx b-rd-20rpx bg-#fff">
+      <view class="w-620rpx h-16rpx flex justify-start items-center mt-60rpx">
+        <view class="w-16rpx h-16rpx ml272rpx bg-#D8D8D8 b-rd-16rpx"></view>
+        <view class="w-48rpx h-16rpx ml10rpx bg-#058BE6 b-rd-8rpx"></view>
+      </view>
+      <view
+        class="ml02rpx mt-60rpx text-center color-#666 font-size-28rpx fw-400"
+      >
+        正在为您审核还车检车项,请稍后
+      </view>
+      <!-- 车辆熄火 -->
+      <view
+        :class="[
+          xh === false
+            ? 'w-552rpx h-84rpx border-1rpx border-solid border-#FF635E mt-38rpx ml34rpx b-rd-8rpx bg-#FFF3F2'
+            : 'w-552rpx h-84rpx border-1rpx border-solid border-#D8D8D8 mt-38rpx ml34rpx b-rd-8rpx'
+        ]"
+      >
+        <view class="flex justify-between items-center">
+          <view class="ml22rpx mt22rpx font-size-32rpx fw-400 color-#333"
+            >车辆已熄火</view
+          >
+          <view class="mr30rpx mt26rpx">
+            <image
+              v-if="xh === false"
+              class="w-32rpx h-32rpx"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/close1.png"
+            >
+            </image>
+            <image
+              v-else-if="xh === true"
+              class="w-32rpx h-32rpx"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/true3.png"
+            >
+            </image>
+            <u-loading-icon v-else class="w-34rpx h-32rpx"></u-loading-icon>
+          </view>
+        </view>
+      </view>
+
+      <!-- 车门已锁 -->
+      <view
+        :class="[
+          cm === false
+            ? 'w-552rpx h-84rpx border-1rpx border-solid border-#FF635E mt-6rpx ml34rpx b-rd-8rpx bg-#FFF3F2'
+            : 'w-552rpx h-84rpx border-1rpx border-solid border-#D8D8D8 mt-6rpx ml34rpx b-rd-8rpx'
+        ]"
+      >
+        <view class="flex justify-between items-center">
+          <view class="ml22rpx mt22rpx font-size-32rpx fw-400 color-#333"
+            >车门已锁</view
+          >
+          <view class="mr30rpx mt26rpx">
+            <image
+              v-if="cm === false"
+              class="w-32rpx h-32rpx"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/close1.png"
+            >
+            </image>
+            <image
+              v-else-if="cm === true"
+              class="w-32rpx h-32rpx"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/true3.png"
+            >
+            </image>
+            <u-loading-icon v-else class="w-34rpx h-32rpx"></u-loading-icon>
+          </view>
+        </view>
+      </view>
+
+      <!-- 车灯已关闭 -->
+      <view
+        :class="[
+          cd === false
+            ? 'w-552rpx h-84rpx border-1rpx border-solid border-#FF635E mt-6rpx ml34rpx b-rd-8rpx bg-#FFF3F2'
+            : 'w-552rpx h-84rpx border-1rpx border-solid border-#D8D8D8 mt-6rpx ml34rpx b-rd-8rpx'
+        ]"
+      >
+        <view class="flex justify-between items-center">
+          <view class="ml22rpx mt22rpx font-size-32rpx fw-400 color-#333"
+            >车灯已关闭</view
+          >
+          <view class="mr30rpx mt26rpx">
+            <image
+              v-if="cd === false"
+              class="w-32rpx h-32rpx"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/close1.png"
+            >
+            </image>
+            <image
+              v-else-if="cd === true"
+              class="w-32rpx h-32rpx"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/true3.png"
+            >
+            </image>
+            <u-loading-icon v-else class="w-34rpx h-32rpx"></u-loading-icon>
+          </view>
+        </view>
+      </view>
+
+      <!-- 车窗已关闭 -->
+      <view
+        :class="[
+          cc === false
+            ? 'w-552rpx h-84rpx border-1rpx border-solid border-#FF635E mt-6rpx ml34rpx b-rd-8rpx bg-#FFF3F2'
+            : 'w-552rpx h-84rpx border-1rpx border-solid border-#D8D8D8 mt-6rpx ml34rpx b-rd-8rpx'
+        ]"
+      >
+        <view class="flex justify-between items-center">
+          <view class="ml22rpx mt22rpx font-size-32rpx fw-400 color-#333"
+            >车窗已关闭</view
+          >
+          <view class="mr30rpx mt26rpx">
+            <image
+              v-if="cc === false"
+              class="w-32rpx h-32rpx"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/close1.png"
+            >
+            </image>
+            <image
+              v-else-if="cc === true"
+              class="w-32rpx h-32rpx"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/true3.png"
+            >
+            </image>
+            <u-loading-icon v-else class="w-34rpx h-32rpx"></u-loading-icon>
+          </view>
+        </view>
+      </view>
+
+      <!-- 防盗锁已开启 -->
+      <view
+        :class="[
+          fds === false
+            ? 'w-552rpx h-84rpx border-1rpx border-solid border-#FF635E mt-6rpx ml34rpx b-rd-8rpx bg-#FFF3F2'
+            : 'w-552rpx h-84rpx border-1rpx border-solid border-#D8D8D8 mt-6rpx ml34rpx b-rd-8rpx'
+        ]"
+      >
+        <view class="flex justify-between items-center">
+          <view class="ml22rpx mt22rpx font-size-32rpx fw-400 color-#333"
+            >防盗锁已开启</view
+          >
+          <view class="mr30rpx mt26rpx">
+            <image
+              v-if="fds === false"
+              class="w-32rpx h-32rpx"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/close1.png"
+            >
+            </image>
+            <image
+              v-else-if="fds === true"
+              class="w-32rpx h-32rpx"
+              src="https://mobje-pro-04-cos.mobje.cn/mini/mini/true3.png"
+            >
+            </image>
+            <u-loading-icon v-else class="w-34rpx h-32rpx"></u-loading-icon>
+          </view>
+        </view>
+      </view>
+      <view
+        v-if="shibai"
+        class="color-#FF5356 font-size-28rpx fw-400 mt-20rpx ml-86rpx"
+      >
+        还车失败，操作未完成，请重新尝试
+      </view>
+    </view>
+  </u-popup>
+
+  <up-modal title="还车提示" :show="isReminderRef" :showCancelButton="true" confirmText="确认还车" cancelText="返回用车" @confirm="confirmReminder" @cancel='isReminderRef=false'>
+    <view class="slot-content">
+      <view style='display: flex; justify-content: space-between;background-color: #F2F4F6; color: #333; font-size: 28rpx; padding: 20rpx 14rpx;border-radius: 10rpx;'>
+        <view>取车{{returnReminderRef.vehicleDynamicModel === 'OIL' ? '油量' : '电量'}}：</view>
+        <view>{{returnReminderRef.startEnergy}}{{returnReminderRef.vehicleDynamicModel === 'OIL' ? 'L' : '%'}}</view>
+      </view>
+      <view style='margin-top: 10rpx; display: flex; justify-content: space-between;background-color: #F2F4F6; color: #333; font-size: 28rpx; padding: 20rpx 14rpx;border-radius: 10rpx;'>
+        <view>还车{{returnReminderRef.vehicleDynamicModel === 'OIL' ? '油量' : '电量'}}：</view>
+        <view>{{returnReminderRef.endEnergy}}{{returnReminderRef.vehicleDynamicModel === 'OIL' ? 'L' : '%'}}</view>
+      </view>
+
+      <view style='display: flex; justify-content: center; color: #666; font-size: 24rpx; margin-top: 20rpx;'>
+        <view>还车需补缴</view><view style='color: #038AE6; display: flex;'>
+        <view v-if="hasEnergyRef">{{returnReminderRef.vehicleDynamicModel === 'OIL' ? '油费' : '电费'}}</view>
+        <view v-if='hasEnergyRef && hasServiceEnergyRef'>、</view>
+        <view v-if="hasServiceEnergyRef">{{returnReminderRef.vehicleDynamicModel === 'OIL' ? '加油' : '充电'}}服务费</view>
+        </view><view>,是否还车?</view>
+      </view>
+      <view style='text-align: center; margin-top: 38rpx; font-size: 20rpx; color: #666;'>若对能源值有疑问，请在还车后【费用结算】中提交，1-3个工作日回复</view>
+    </view>
+  </up-modal>
+
+  <up-modal title="温馨提示" :show="isQuestionModalShow" @confirm="isQuestionModalShow = false">
+    <view class="slot-content">
+      <view>·还车时油/电费 多退少补，订单实付金额内自动退款，建议您自行保留油/电量记录</view>
+      <view>·若对能源值有疑问，请在还车后【费用结算】中尽快提交，1-3个工作日回复</view>
+    </view>
+  </up-modal>
+</template>
